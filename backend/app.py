@@ -11,7 +11,6 @@ CORS(app)
 def home():
     return "Autonomous Cloud Cost Intelligence Backend Running"
 
-# Your existing simulation route (kept unchanged)
 @app.route("/cost")
 def get_cost():
     try:
@@ -54,7 +53,6 @@ def get_cost():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# NEW: Azure authentication test route
 @app.route("/auth-test")
 def auth_test():
     try:
@@ -64,7 +62,7 @@ def auth_test():
             client_secret=os.getenv("AZURE_CLIENT_SECRET")
         )
 
-        token = credential.get_token("https://management.azure.com/.default")
+        credential.get_token("https://management.azure.com/.default")
         return jsonify({"status": "Azure Authentication Successful"})
 
     except Exception as e:
