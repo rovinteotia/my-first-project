@@ -3,6 +3,7 @@ from flask_cors import CORS
 from azure.identity import ClientSecretCredential
 from azure.mgmt.costmanagement import CostManagementClient
 import os
+from ml.model import predict_cost
 
 app = Flask(__name__)
 CORS(app)
@@ -46,7 +47,7 @@ def get_cost():
 
         return jsonify({
             "current_cost": round(amount, 2),
-            "predicted_cost": round(amount * 1.1, 2),
+            "predicted_cost": round(predict_cost(amount), 2),
             "recommendation": "Monitor high usage resources to reduce cost"
         })
 
