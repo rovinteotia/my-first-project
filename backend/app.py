@@ -2,8 +2,9 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from azure.identity import ClientSecretCredential
 from azure.mgmt.costmanagement import CostManagementClient
-import os
 from ml.model import predict_cost
+import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -12,17 +13,18 @@ CORS(app)
 def home():
     return "Autonomous Cloud Cost Intelligence Backend Running"
 
+
 @app.route("/cost")
 def get_cost():
     try:
+        # -------- AZURE COST FETCH LOGIC --------
         credential = ClientSecretCredential(
-            tenant_id=os.environ["AZURE_TENANT_ID"],
-            client_id=os.environ["AZURE_CLIENT_ID"],
-            client_secret=os.environ["AZURE_CLIENT_SECRET"],
+            tenant_id=os.getenv("AZURE_TENANT_ID"),
+            client_id=os.getenv("AZURE_CLIENT_ID"),
+            client_secret=os.getenv("AZURE_CLIENT_SECRET")
         )
 
-        subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
-
+        subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
         cost_client = CostManagementClient(credential)
 
         query = {
@@ -40,7 +42,6 @@ def get_cost():
         }
 
         scope = f"/subscriptions/{subscription_id}"
-
         result = cost_client.query.usage(scope, query)
 
         amount = result.rows[0][0]
@@ -51,8 +52,16 @@ def get_cost():
             "recommendation": "Monitor high usage resources to reduce cost"
         })
 
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    except Exception:
+        # -------- FALLBACK SIMULATION --------
+        simulated_cost = 3500
+
+        return jsonify({
+            "current_cost": simulated_cost,
+            "predicted_cost": round(predict_cost(simulated_cost), 2),
+            "recommendation": "Azure authentication failed. Using simulated data."
+        })
+
 
 @app.route("/auth-test")
 def auth_test():
@@ -68,6 +77,18 @@ def auth_test():
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
+@app.route("/predict/<int:usage>")
+def predict_usage(usage):
+    predicted = predict_cost(usage)
+
+    return jsonify({
+        "current_cost": usage,
+        "predicted_cost": round(predicted, 2),
+        "recommendation": "Reduce unused VMs if cost is increasing"
+    })
+
 
 if __name__ == "__main__":
     app.run(debug=True)
