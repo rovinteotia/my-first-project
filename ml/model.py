@@ -1,14 +1,13 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-# Sample historical cloud usage data
-usage = np.array([[100], [200], [300], [400], [500], [600]])
-cost = np.array([1100, 1900, 3200, 4100, 5300, 6100])
+# Simulated historical cost trend
+current_cost = np.array([[1000], [2000], [3000], [4000], [5000]])
+next_month_cost = np.array([1080, 2150, 3150, 4300, 5500])
 
-# Train model
 model = LinearRegression()
-model.fit(usage, cost)
+model.fit(current_cost, next_month_cost)
 
-def predict_cost(new_usage):
-    prediction = model.predict([[new_usage]])
+def predict_cost(new_cost):
+    prediction = model.predict([[new_cost]])
     return float(prediction[0])
